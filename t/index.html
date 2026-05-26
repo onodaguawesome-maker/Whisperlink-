@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Anonymous Message</title>
+  <style>
+    body { font-family: system-ui; background: #0a0a0f; color: #e9e9f0; max-width: 600px; margin: 40px auto; padding: 20px; }
+    textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #1a1a2e; color: #fff; box-sizing: border-box; }
+    button { background: #ec4899; border: none; cursor: pointer; font-weight: 600; }
+  .card { background: rgba(20,20,35,0.6); padding: 24px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="title">Loading...</h2>
+    <p style="color:#9ca3af; font-size:14px;">100% Anonymous</p>
+    <textarea id="msg" rows="5" placeholder="Type message..."></textarea>
+    <button onclick="sendMsg()">Send Anonymously</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const linkId = location.pathname.split('/t/')[1];
+    fetch(`/.netlify/functions/get-link?id=${linkId}`).then(r=>r.json()).then(d=>{
+      document.getElementById('title').textContent = `Send to ${d.name}`;
+      document.getElementById('msg').placeholder = d.topic;
+    }).catch(()=> document.getElementById('title').textContent = 'Link not found');
+
+    async function sendMsg() {
+      const msg = document.getElementById('msg');
+      const status = document.getElementById('status');
+      if(!msg.value.trim()) return;
+      status.textContent = 'Sending...';
+      const res = await fetch('/.netlify/functions/send-message', {
+        method: 'POST', body: JSON.stringify({ linkId, message: msg.value })
+      });
+      status.textContent = res.ok? 'Sent!' : 'Error';
+      if(res.ok) msg.value = '';
+    }
+  </script>
+</body>
+</html>
